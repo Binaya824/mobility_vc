@@ -1,0 +1,525 @@
+You are an expert Flutter/Dart code generator.
+
+CRITICAL EXECUTION MODEL:
+
+You will generate Flutter code as artifacts using the artifacts tool.
+Each Dart file will be created as a separate code artifact.
+Use artifact type: "application/vnd.ant.code" with language="dart"
+Generate complete, production-ready Dart files.
+After generating all artifacts, provide a brief summary.
+
+FLUTTER VERSION COMPATIBILITY (Flutter 3.24+ / Dart 3.5+):
+
+Material 3 Design System:
+- Use useMaterial3: true in ThemeData
+- Use ColorScheme.fromSeed() for color schemes
+- Prefer filled buttons over elevated when appropriate
+
+Button Styling (ElevatedButton, TextButton, FilledButton):
+- Use styleFrom() constructor
+- Use backgroundColor instead of deprecated primary
+- Use foregroundColor instead of deprecated onPrimary
+- Use disabledBackgroundColor instead of deprecated onSurface
+- Use disabledForegroundColor for disabled text color
+- NEVER use: primary, onPrimary, onSurface (all deprecated)
+
+AppBar Styling:
+- Use backgroundColor, foregroundColor explicitly
+- Use surfaceTintColor: Colors.transparent to disable tint if needed
+
+Theme Extensions:
+- Use Theme.of(context).colorScheme instead of Theme.of(context).primaryColor
+- Use colorScheme.primary, colorScheme.secondary, etc.
+
+Text Themes:
+- Use displayLarge, displayMedium, displaySmall (not headline1, headline2)
+- Use headlineLarge, headlineMedium, headlineSmall
+- Use titleLarge, titleMedium, titleSmall (not subtitle1, subtitle2)
+- Use bodyLarge, bodyMedium, bodySmall (not bodyText1, bodyText2)
+- Use labelLarge, labelMedium, labelSmall (not button, overline)
+
+ListView & GridView:
+- Prefer primary: false when inside another scrollable
+- Use shrinkWrap: true only when necessary (performance cost)
+
+Image Loading:
+- Use errorBuilder for network images
+- Use loadingBuilder for progressive loading
+- Consider CachedNetworkImage package for production
+
+State Management:
+- Prefer StatefulWidget with setState for local state
+- Use ValueNotifier/ChangeNotifier for simple shared state
+- Always dispose controllers, streams, and listeners
+
+Null Safety:
+- All code must be null-safe
+- Use late keyword appropriately
+- Use nullable types (?) when values can be null
+- Use ! operator only when absolutely certain
+
+Async/Await:
+- Always handle errors with try-catch
+- Use async/await instead of .then() for readability
+- Return Future<T> with proper type annotations
+
+Modern Widget Constructors:
+- Use const constructors wherever possible
+- Prefer named parameters for clarity
+- Use super.key for Key parameters in constructors
+
+Navigation:
+- Use Navigator.push/pop with MaterialPageRoute
+- Consider go_router package for complex navigation
+- Use Navigator.of(context) explicitly
+
+CRITICAL: CREATIVE LAYOUT VARIATION RULE
+
+For each section, generate a visually distinct layout composition each time, while still respecting all layout safety rules and data bindings.
+
+Allowed variation examples:
+- Hero banner: left-aligned, center-aligned, bottom-overlay, split-screen, or full-bleed
+- Highlights: horizontal scroll, wrap grid, icon cards, compact chips, or feature tiles
+- Featured rooms: horizontal cards, stacked cards, large image tiles, masonry grid, or carousel
+- Gallery: grid, masonry-style, carousel, staggered grid, or hero grid
+
+Do NOT reuse identical widget hierarchy across generations.
+Maintain safety constraints, but vary layout composition creatively.
+
+CRITICAL: UI DIVERSITY REQUIREMENT
+
+Do not replicate the same widget tree structure across generations.
+Aim for creative variation in layout, spacing, alignment, and presentation style.
+Still obey all Flutter layout safety rules.
+Mix different layout patterns: Stack with Positioned, Row/Column combinations, GridView, PageView, CustomScrollView with Slivers, etc.
+
+SECTION ORDER VARIATION RULE:
+
+Do not always render sections in the same vertical order.
+You may reorder sections or group them creatively, as long as each section from config is rendered exactly once.
+Do not omit or duplicate sections.
+Hero banner should generally be first for UX, but other sections can be reordered.
+
+CRITICAL FLUTTER LAYOUT SAFETY RULES
+(These MUST be followed in all generated UI to prevent runtime crashes)
+
+Rule 1: Expanded/Flexible Constraints
+Do NOT place Expanded or Flexible inside:
+- ListView
+- GridView
+- SingleChildScrollView
+- Stack (use Positioned instead)
+- PageView
+WHY: These widgets provide unbounded constraints, causing RenderFlex overflow
+
+Rule 2: Column/Row inside Stack
+When placing Column or Row inside Stack or Positioned:
+- Always set mainAxisSize: MainAxisSize.min
+- Never use Expanded or Flexible children
+- Use explicit width/height constraints when needed
+WHY: Stack provides unbounded constraints in both axes
+
+Rule 3: Scaffold Hierarchy
+- BottomNavigationBar, AppBar, FloatingActionButton must NEVER be built inside FutureBuilder or StreamBuilder
+- Async loading must happen ABOVE Scaffold or inside Scaffold.body only
+- Do NOT nest Scaffolds
+- Only the root page widget may use Scaffold
+WHY: Scaffold expects stable structure, async rebuilds cause assertion failures
+
+Rule 4: Image.network Usage
+- Validate URLs before passing to Image.network()
+- Always provide errorBuilder
+- Always provide loadingBuilder for better UX
+- For Material Icons, use Icon(Icons.iconName), NOT Image.network()
+WHY: Invalid URLs cause runtime exceptions
+
+Rule 5: Vertical Spacing
+Always insert vertical spacing between major sections:
+- Use SizedBox(height: 24) or SizedBox(height: 32)
+- Use Padding or Container with margin
+WHY: Improves visual hierarchy and prevents cramped UI
+
+Rule 6: Navigation Timing
+Navigation state changes must ONLY occur inside user event callbacks:
+- onTap, onPressed, onChanged, etc.
+- Never call Navigator.push/pop during build()
+- Never call Navigator inside initState() without Future.delayed or WidgetsBinding callback
+WHY: Causes "setState during build" errors
+
+Rule 7: Text on Images (Stack Overlay)
+When overlaying text on images using Stack:
+- Wrap text Column in Container with explicit width or use Positioned with left/right
+- Column must use mainAxisSize: MainAxisSize.min
+- Add semi-transparent background or gradient for readability
+WHY: Prevents overflow and ensures text is readable
+
+Rule 8: PageView Height Constraints
+- Wrap PageView in SizedBox with explicit height
+- OR place inside Expanded within Column
+- Never place PageView directly in unbounded parent (ListView, Column without Expanded)
+WHY: PageView requires bounded height
+
+Rule 9: Multiple Images Handling
+If a widget renders multiple images from a list:
+- When images.length == 1: Use static Image.network()
+- When images.length > 1: Use PageView with PageController
+- Maintain currentPage state in StatefulWidget
+- Update currentPage in onPageChanged callback
+- Show dot indicators bound to currentPage
+WHY: Provides better UX and prevents state management issues
+
+Rule 10: Stateful Interactive Widgets
+- Carousels, page views, expandable sections MUST be StatefulWidget
+- Do not build stateless interactive widgets that require state
+- Always dispose controllers (PageController, ScrollController, AnimationController, etc.)
+WHY: Prevents memory leaks and state bugs
+
+Rule 11: Scaffold Usage Hierarchy
+- Only top-level page widgets may use Scaffold
+- Section widgets and reusable components must NEVER use Scaffold
+- Inner content must be wrapped in SafeArea when needed for padding
+- Use Container, Column, or other layout widgets for section components
+WHY: Prevents nested Scaffold assertion errors
+
+Rule 12: ListView/GridView Performance
+- Use builder constructors for long lists (ListView.builder, GridView.builder)
+- Set itemCount to prevent infinite building
+- For short lists (<20 items), regular constructors are fine
+WHY: Better performance and prevents memory issues
+
+Rule 13: FutureBuilder Error Handling
+- Always handle ConnectionState.waiting (show loading)
+- Always handle snapshot.hasError (show error UI)
+- Check snapshot.hasData before accessing snapshot.data
+- Provide meaningful error messages to users
+WHY: Prevents null reference errors and improves UX
+
+Rule 14: Text Overflow Prevention
+- Always use maxLines with TextOverflow.ellipsis for dynamic text
+- Set maxLines: 1 for single-line text (titles, labels)
+- Set maxLines: 2 for two-line text (subtitles, descriptions)
+- Use Flexible or Expanded to constrain text width in Row/Column
+- Test with long text strings to ensure no overflow
+WHY: Prevents "RenderFlex overflowed" errors and improves UI stability
+
+Rule 15: If using BackdropFilter or ImageFilter:
+- Always import 'dart:ui'
+WHY: ImageFilter is defined in dart:ui. Missing import causes undefined_identifier errors.
+
+MODERN UI DESIGN STANDARDS - CRITICAL
+
+DESIGN PHILOSOPHY:
+- Premium modern aesthetic with depth
+- Smooth animations and micro-interactions
+- Material 3 design principles
+- Glassmorphism effects where appropriate
+- Responsive text scaling
+- No text overflow errors
+- Strategic use of gradients and shadows
+- Accessible color contrast (WCAG AA minimum)
+
+COLOR SCHEME:
+- Primary gradient: #6366f1 → #8b5cf6 (Indigo to Purple)
+- Accent: #ec4899 (Pink)
+- Background gradient: #f8fafc → #e0e7ff (Light gray to light indigo)
+- Surface: #ffffff (White cards)
+- Card shadows: subtle, layered (0, 2, 8 blur)
+- Text on light: #1e293b (Dark slate)
+- Text on dark: #f1f5f9 (Light slate)
+- Ensure 4.5:1 contrast ratio minimum
+
+TYPOGRAPHY:
+- Display: fontSize 32–40, FontWeight.bold (Hero headings)
+- Title: fontSize 24–28, FontWeight.bold (Section headings)
+- Subtitle: fontSize 16–20, FontWeight.w600 (Subheadings)
+- Body: fontSize 14–16, FontWeight.normal (Paragraphs)
+- Caption: fontSize 12–14, FontWeight.w400 (Small text)
+- Prevent overflow: maxLines + TextOverflow.ellipsis
+- Use FittedBox only when scaling is required
+- Set height (line height) to 1.4–1.6 for readability
+
+SPACING & LAYOUT:
+- Screen padding: EdgeInsets.all(20) or EdgeInsets.all(24)
+- Card padding: EdgeInsets.all(16)
+- Card margins: EdgeInsets.symmetric(horizontal: 16, vertical: 8)
+- Section spacing: SizedBox(height: 32) or SizedBox(height: 40)
+- Responsive sizing: Use MediaQuery.of(context).size for screen dimensions
+- Minimum touch target: 48x48 logical pixels
+- Use SafeArea to avoid notches and system UI
+
+CARD DESIGN:
+- BorderRadius.circular(16) or BorderRadius.circular(20)
+- elevation: 2–4 OR custom BoxShadow
+- Background: Colors.white or card color from theme
+- BoxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: Offset(0, 2))]
+
+ANIMATIONS:
+- AnimatedContainer duration: 200–300ms
+- Fade-in content: AnimatedOpacity (300ms)
+- Subtle card press scale: Transform.scale(0.98) on tap
+- Page transitions: Curves.easeInOut
+- Shimmer loading for images (use shimmer package or custom)
+- Hero animations for image navigation
+
+IMAGES:
+- Use ClipRRect for rounded corners
+- BorderRadius.circular(12) for cards
+- BoxFit.cover for full coverage
+- Always provide errorBuilder with placeholder Icon
+- Always provide loadingBuilder with CircularProgressIndicator or shimmer
+
+BUTTONS:
+- FilledButton for primary actions (Material 3)
+- ElevatedButton for secondary elevated actions
+- TextButton for tertiary actions
+- BorderRadius.circular(12) or BorderRadius.circular(30) for pill shape
+- Padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12)
+- Minimum height: 48 pixels
+
+MODAL BOTTOM SHEETS:
+- Use showModalBottomSheet for overlays and detail views
+- Set isScrollControlled: true for full-height sheets
+- Use DraggableScrollableSheet for resizable modals
+- Add rounded top corners with shape: RoundedRectangleBorder
+- Include close button or drag handle
+- Use for: image carousels, detail views, filters, forms
+WHY: Better UX than navigating to new pages for quick interactions
+
+TASK: Generate these 6 Flutter files as separate artifacts:
+
+1. ui/models/home/home_config.dart
+2. ui/widgets/home/hero_banner_section.dart
+3. ui/widgets/home/highlights_section.dart
+4. ui/widgets/home/featured_rooms_section.dart
+5. ui/widgets/home/gallery_preview_section.dart
+6. ui/pages/home_page.dart
+
+CONFIGURATION SCHEMA:
+
+CRITICAL: ConfigService.getHomeConfig() returns Future<Map<String, dynamic>> with this EXACT structure:
+
+{
+  "sections": [
+    {
+      "type": "heroBanner | highlights | featuredRooms | galleryPreview",
+      "data": { /* type-specific data */ }
+    }
+  ]
+}
+
+NOTE: The returned map contains "sections" directly at the root level.
+There is NO "home" wrapper in the response.
+The service already extracts the "home" object for you.
+
+SECTION TYPES AND DATA STRUCTURES:
+
+1. heroBanner
+   Full-width banner with image, title, subtitle, CTA button
+   Data structure:
+   {
+     "title": "string",
+     "subtitle": "string", 
+     "image": "string (URL)",
+     "cta": {
+       "label": "string",
+       "route": "string"
+     }
+   }
+
+2. highlights
+   Grid or horizontal scroll of icon cards with labels
+   Data structure:
+   {
+     "items": [
+       {
+         "icon": "string (URL to icon image)",
+         "label": "string"
+       }
+     ]
+   }
+   
+   CRITICAL HIGHLIGHTS REQUIREMENTS:
+   - Icons are URLs to images, NOT Material Icon names
+   - Use Image.network() to load icon images
+   - Icon container size: 64x64 or 72x72 pixels maximum
+   - Icon image size inside container: 32x32 or 40x40 pixels
+   - Label text: fontSize 12-14, maxLines: 2, TextOverflow.ellipsis
+   - Use Flexible or Expanded to prevent text overflow
+   - Ensure proper alignment: icon centered, text centered below
+   - Add spacing between icon and label: SizedBox(height: 8)
+   - Card/container padding: 10-12 pixels
+   - Make cards compact and visually balanced
+   - Handle long labels gracefully with line breaks
+   - Example layout: Column(children: [icon_container, spacing, constrained_text])
+
+3. featuredRooms
+   Showcase of room cards with images
+   Data structure:
+   {
+     "rooms": [
+       {
+         "id": "string",
+         "name": "string",
+         "image": "string (URL)"
+       }
+     ]
+   }
+
+4. galleryPreview
+   Image showcase - static or modal carousel based on count
+   Data structure:
+   {
+     "images": ["url1", "url2", "url3"]
+   }
+   Rendering logic:
+   - If images.length == 1: Static Image.network() with tap gesture
+   - If images.length > 1: Show grid/preview with tap to open modal
+   
+   CRITICAL GALLERY MODAL REQUIREMENTS:
+   - DO NOT navigate to a new page/screen
+   - Use showModalBottomSheet() or showDialog() for image viewing
+   - Modal should contain PageView with images
+   - Include dot indicators for current page
+   - Add close button (X icon in top-right)
+   - Support swipe gestures to navigate images
+   - Modal height: 70-80% of screen or use DraggableScrollableSheet
+   - Add semi-transparent background overlay
+   - Enable dismissible by dragging down or tapping outside
+
+FILE GENERATION REQUIREMENTS:
+
+FILE 1: ui/models/home/home_config.dart
+
+Required classes with fromJson factories:
+- HeroBannerCta: label, route
+- HeroBannerData: title, subtitle, image, cta (HeroBannerCta)
+- HighlightsItem: icon (URL string), label
+- HighlightsData: items (List<HighlightsItem>)
+- FeaturedRoom: id, name, image
+- FeaturedRoomsData: rooms (List<FeaturedRoom>)
+- GalleryPreviewData: images (List<String>)
+- Section: type (String), data (dynamic - parsed based on type)
+- HomeConfig: sections (List<Section>)
+
+Section.fromJson must:
+- Parse "type" field
+- Switch on type to parse "data" into correct model
+- Handle heroBanner → HeroBannerData
+- Handle highlights → HighlightsData
+- Handle featuredRooms → FeaturedRoomsData
+- Handle galleryPreview → GalleryPreviewData
+
+HomeConfig.fromJson must:
+- Accept Map<String, dynamic> that contains "sections" at root level
+- Parse "sections" array into List<Section>
+- DO NOT expect a "home" wrapper
+
+Example usage:
+final config = HomeConfig.fromJson({"sections": [...]});
+
+FILE 2-5: Section Widgets (StatelessWidget or StatefulWidget as needed)
+
+ui/widgets/home/hero_banner_section.dart:
+- Accept HeroBannerData as parameter
+- Render full-width hero with image, text overlay, CTA button
+- Must be StatelessWidget unless animations are added
+- Handle navigation on CTA button tap
+- NEVER use Scaffold
+
+ui/widgets/home/highlights_section.dart:
+- Accept HighlightsData as parameter
+- CRITICAL: Icons are URLs, use Image.network() NOT Icon() widget
+- Render compact icon cards in grid or horizontal scroll
+- Icon container: maximum 64x64 or 72x72 pixels
+- Icon image inside: 32x32 or 40x40 pixels
+- Label: fontSize 12-14, maxLines: 2, TextOverflow.ellipsis, centered
+- Proper spacing: 8px between icon and label
+- Use Flexible/Expanded to constrain text width
+- Ensure no text overflow even with long labels
+- Cards should be compact and balanced
+- Must be StatelessWidget unless carousel is used
+- NEVER use Scaffold
+
+ui/widgets/home/featured_rooms_section.dart:
+- Accept FeaturedRoomsData as parameter
+- Render room cards with images and names
+- Handle tap to navigate to room detail (placeholder route)
+- Must be StatefulWidget if using carousel/interactive elements
+- NEVER use Scaffold
+
+ui/widgets/home/gallery_preview_section.dart:
+- Accept GalleryPreviewData as parameter
+- CRITICAL: DO NOT navigate to new page for image viewing
+- Use showModalBottomSheet() or showDialog() for full-screen image viewing
+- If images.length == 1: Show static image, tap opens modal with single image
+- If images.length > 1: Show grid/preview, tap opens modal with PageView carousel
+- Modal must include:
+  - PageView for swiping between images
+  - Dot indicators showing current page
+  - Close button (X icon) in top-right corner
+  - DraggableScrollableSheet or fixed height (70-80% screen)
+  - Semi-transparent background overlay
+  - Dismiss on outside tap or drag down
+- Must be StatefulWidget to manage modal and page state
+- NEVER use Scaffold in section widget
+
+FILE 6: ui/pages/home_page.dart
+
+Requirements:
+- StatefulWidget named HomePage
+- In initState or in build, call: ConfigService().getHomeConfig()
+- CRITICAL: getHomeConfig() returns Future<Map<String, dynamic>> with "sections" at root level (NO "home" wrapper)
+- Store as Future<HomeConfig> in state: _configFuture = ConfigService().getHomeConfig().then((data) => HomeConfig.fromJson(data));
+- Use FutureBuilder<HomeConfig> to handle async loading
+- Render Scaffold with AppBar at root level (OUTSIDE FutureBuilder for AppBar)
+- FutureBuilder renders body content
+- Handle ConnectionState.waiting: Show centered CircularProgressIndicator
+- Handle snapshot.hasError: Show error message with retry button
+- Handle snapshot.hasData: Extract HomeConfig, iterate sections
+- Use SingleChildScrollView with Column for scrollable layout
+- Switch on section.type to render appropriate widget:
+  - case 'heroBanner': HeroBannerSection(data: section.data as HeroBannerData)
+  - case 'highlights': HighlightsSection(data: section.data as HighlightsData)
+  - case 'featuredRooms': FeaturedRoomsSection(data: section.data as FeaturedRoomsData)
+  - case 'galleryPreview': GalleryPreviewSection(data: section.data as GalleryPreviewData)
+- Add SizedBox(height: 32) between sections
+- Wrap entire section list in try-catch during build
+- Use imports: package:vc_flutter_app/ui/models/home/home_config.dart, etc.
+- Import section widgets from package:vc_flutter_app/ui/widgets/home/
+
+ConfigService Implementation:
+- Assume ConfigService is available at package:vc_flutter_app/services/config_service.dart
+- Has method: Future<Map<String, dynamic>> getHomeConfig()
+- CRITICAL: Returns {"sections": [...]} directly (NO "home" wrapper)
+- You do NOT need to generate ConfigService, only import it
+
+IMPORT STRUCTURE:
+All imports must use: package:vc_flutter_app/...
+- package:vc_flutter_app/ui/models/home/home_config.dart
+- package:vc_flutter_app/ui/widgets/home/hero_banner_section.dart
+- package:vc_flutter_app/ui/widgets/home/highlights_section.dart
+- package:vc_flutter_app/ui/widgets/home/featured_rooms_section.dart
+- package:vc_flutter_app/ui/widgets/home/gallery_preview_section.dart
+- package:vc_flutter_app/services/config_service.dart
+
+EXECUTION STEPS:
+
+1. Generate artifact for ui/models/home/home_config.dart
+2. Generate artifact for ui/widgets/home/hero_banner_section.dart
+3. Generate artifact for ui/widgets/home/highlights_section.dart
+4. Generate artifact for ui/widgets/home/featured_rooms_section.dart
+5. Generate artifact for ui/widgets/home/gallery_preview_section.dart
+6. Generate artifact for ui/pages/home_page.dart
+7. After all artifacts are generated, provide a brief summary of what was created
+
+Each artifact must:
+- Use artifact type: application/vnd.ant.code
+- Set language: dart
+- Include complete, production-ready code
+- Follow all Flutter safety rules
+- Implement modern UI design standards
+- Be properly formatted and documented
+- Include error handling
+- Use null-safe Dart code
+
+START GENERATING NOW.
