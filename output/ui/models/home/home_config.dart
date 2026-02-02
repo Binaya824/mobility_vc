@@ -1,63 +1,5 @@
-import 'dart:convert';
-
-class HomeConfig {
-  final List<Section> sections;
-
-  HomeConfig({required this.sections});
-
-  factory HomeConfig.fromJson(Map<String, dynamic> json) {
-    return HomeConfig(
-      sections: (json['sections'] as List)
-          .map((sectionJson) => Section.fromJson(sectionJson))
-          .toList(),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'sections': sections.map((section) => section.toJson()).toList(),
-    };
-  }
-}
-
-class Section {
-  final String type;
-  final dynamic data;
-
-  Section({required this.type, required this.data});
-
-  factory Section.fromJson(Map<String, dynamic> json) {
-    final type = json['type'] as String;
-    final dataJson = json['data'] as Map<String, dynamic>;
-    
-    dynamic data;
-    switch (type) {
-      case 'heroBanner':
-        data = HeroBannerData.fromJson(dataJson);
-        break;
-      case 'highlights':
-        data = HighlightsData.fromJson(dataJson);
-        break;
-      case 'featuredRooms':
-        data = FeaturedRoomsData.fromJson(dataJson);
-        break;
-      case 'galleryPreview':
-        data = GalleryPreviewData.fromJson(dataJson);
-        break;
-      default:
-        throw ArgumentError('Unknown section type: $type');
-    }
-
-    return Section(type: type, data: data);
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'type': type,
-      'data': data.toJson(),
-    };
-  }
-}
+// home_config.dart
+import 'package:flutter/foundation.dart';
 
 class HeroBannerCta {
   final String label;
@@ -70,13 +12,6 @@ class HeroBannerCta {
       label: json['label'] as String,
       route: json['route'] as String,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'label': label,
-      'route': route,
-    };
   }
 }
 
@@ -101,15 +36,6 @@ class HeroBannerData {
       cta: HeroBannerCta.fromJson(json['cta'] as Map<String, dynamic>),
     );
   }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'title': title,
-      'subtitle': subtitle,
-      'image': image,
-      'cta': cta.toJson(),
-    };
-  }
 }
 
 class HighlightsItem {
@@ -124,13 +50,6 @@ class HighlightsItem {
       label: json['label'] as String,
     );
   }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'icon': icon,
-      'label': label,
-    };
-  }
 }
 
 class HighlightsData {
@@ -139,17 +58,10 @@ class HighlightsData {
   HighlightsData({required this.items});
 
   factory HighlightsData.fromJson(Map<String, dynamic> json) {
+    final itemsList = json['items'] as List;
     return HighlightsData(
-      items: (json['items'] as List)
-          .map((itemJson) => HighlightsItem.fromJson(itemJson))
-          .toList(),
+      items: itemsList.map((item) => HighlightsItem.fromJson(item as Map<String, dynamic>)).toList(),
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'items': items.map((item) => item.toJson()).toList(),
-    };
   }
 }
 
@@ -158,11 +70,7 @@ class FeaturedRoom {
   final String name;
   final String image;
 
-  FeaturedRoom({
-    required this.id,
-    required this.name,
-    required this.image,
-  });
+  FeaturedRoom({required this.id, required this.name, required this.image});
 
   factory FeaturedRoom.fromJson(Map<String, dynamic> json) {
     return FeaturedRoom(
@@ -170,14 +78,6 @@ class FeaturedRoom {
       name: json['name'] as String,
       image: json['image'] as String,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'image': image,
-    };
   }
 }
 
@@ -187,17 +87,10 @@ class FeaturedRoomsData {
   FeaturedRoomsData({required this.rooms});
 
   factory FeaturedRoomsData.fromJson(Map<String, dynamic> json) {
+    final roomsList = json['rooms'] as List;
     return FeaturedRoomsData(
-      rooms: (json['rooms'] as List)
-          .map((roomJson) => FeaturedRoom.fromJson(roomJson))
-          .toList(),
+      rooms: roomsList.map((room) => FeaturedRoom.fromJson(room as Map<String, dynamic>)).toList(),
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'rooms': rooms.map((room) => room.toJson()).toList(),
-    };
   }
 }
 
@@ -207,14 +100,55 @@ class GalleryPreviewData {
   GalleryPreviewData({required this.images});
 
   factory GalleryPreviewData.fromJson(Map<String, dynamic> json) {
+    final imagesList = json['images'] as List;
     return GalleryPreviewData(
-      images: (json['images'] as List).map((image) => image as String).toList(),
+      images: imagesList.map((image) => image as String).toList(),
     );
   }
+}
 
-  Map<String, dynamic> toJson() {
-    return {
-      'images': images,
-    };
+class Section {
+  final String type;
+  final dynamic data;
+
+  Section({required this.type, required this.data});
+
+  factory Section.fromJson(Map<String, dynamic> json) {
+    final type = json['type'] as String;
+    final dataJson = json['data'] as Map<String, dynamic>;
+    
+    dynamic data;
+    
+    switch (type) {
+      case 'heroBanner':
+        data = HeroBannerData.fromJson(dataJson);
+        break;
+      case 'highlights':
+        data = HighlightsData.fromJson(dataJson);
+        break;
+      case 'featuredRooms':
+        data = FeaturedRoomsData.fromJson(dataJson);
+        break;
+      case 'galleryPreview':
+        data = GalleryPreviewData.fromJson(dataJson);
+        break;
+      default:
+        throw ArgumentError('Unknown section type: $type');
+    }
+    
+    return Section(type: type, data: data);
+  }
+}
+
+class HomeConfig {
+  final List<Section> sections;
+
+  HomeConfig({required this.sections});
+
+  factory HomeConfig.fromJson(Map<String, dynamic> json) {
+    final sectionsList = json['sections'] as List;
+    return HomeConfig(
+      sections: sectionsList.map((section) => Section.fromJson(section as Map<String, dynamic>)).toList(),
+    );
   }
 }

@@ -1,3 +1,4 @@
+// hero_banner_section.dart
 import 'package:flutter/material.dart';
 import 'package:vc_flutter_app/ui/models/home/home_config.dart';
 
@@ -6,12 +7,18 @@ class HeroBannerSection extends StatelessWidget {
 
   const HeroBannerSection({super.key, required this.data});
 
+  void _handleCtaTap(BuildContext context) {
+    // Navigate to the specified route
+    Navigator.pushNamed(context, data.cta.route);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    
     return Container(
       width: double.infinity,
-      height: 400,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      height: screenWidth * 0.7, // Responsive height based on screen width
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -24,119 +31,116 @@ class HeroBannerSection extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Background Image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Image.network(
-              data.image,
-              width: double.infinity,
-              height: double.infinity,
-              fit: BoxFit.cover,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        const Color(0xFF6366F1),
-                        const Color(0xFF8B5CF6),
-                      ],
-                    ),
-                  ),
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                          : null,
-                      color: Colors.white,
-                    ),
-                  ),
-                );
-              },
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        const Color(0xFF6366F1),
-                        const Color(0xFF8B5CF6),
-                      ],
-                    ),
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.image_not_supported,
-                      color: Colors.white,
-                      size: 48,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // Gradient Overlay
-          Container(
-            decoration: BoxDecoration(
+          // Background image with gradient overlay
+          Positioned.fill(
+            child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withOpacity(0.3),
-                  Colors.black.withOpacity(0.7),
-                ],
+              child: Image.network(
+                data.image,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.blue.shade100,
+                          Colors.purple.shade100,
+                        ],
+                      ),
+                    ),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.blue.shade100,
+                          Colors.purple.shade100,
+                        ],
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      size: 64,
+                      color: Colors.white,
+                    ),
+                  );
+                },
               ),
             ),
           ),
-
-          // Content
-          Padding(
-            padding: const EdgeInsets.all(32),
+          
+          // Gradient overlay for text readability
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.7),
+                    Colors.transparent,
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.3),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          
+          // Content overlay
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: 24,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   data.title,
-                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 36,
-                        height: 1.1,
-                      ),
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    height: 1.1,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Text(
                   data.subtitle,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 16,
-                        height: 1.4,
-                      ),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                    height: 1.4,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 FilledButton(
-                  onPressed: () {
-                    // Navigate to CTA route
-                    Navigator.pushNamed(context, data.cta.route);
-                  },
+                  onPressed: () => _handleCtaTap(context),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFEC4899),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
-                    ),
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.blue.shade700,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -145,7 +149,7 @@ class HeroBannerSection extends StatelessWidget {
                     data.cta.label,
                     style: const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),

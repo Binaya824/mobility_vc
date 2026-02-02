@@ -41,150 +41,117 @@ class _CustomNavBarState extends State<CustomNavBar> {
       future: _navConfigFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SizedBox.shrink();
+          return _buildLoadingNavBar();
         }
 
         if (snapshot.hasError) {
-          return _buildErrorNavBar();
+          return _buildErrorNavBar(snapshot.error.toString());
         }
 
         if (!snapshot.hasData) {
-          return _buildErrorNavBar();
+          return _buildErrorNavBar('No navigation configuration found');
         }
 
         final config = snapshot.data!;
-        final items = (config['items'] as List<dynamic>? ?? [])
-            .where((item) => item['visible'] == true)
-            .toList();
+        final items = (config['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+        final visibleItems = items.where((item) => item['visible'] == true).toList();
 
-        if (items.isEmpty) {
-          return const SizedBox.shrink();
+        if (visibleItems.isEmpty) {
+          return _buildErrorNavBar('No visible navigation items');
         }
 
-        return _buildGlassmorphicNavBar(items);
+        return _buildGlassmorphicNavBar(visibleItems);
       },
     );
   }
 
-  Widget _buildGlassmorphicNavBar(List<dynamic> items) {
+  Widget _buildLoadingNavBar() {
+    return Container(
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.85),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+
+  Widget _buildErrorNavBar(String error) {
+    return Container(
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.red.shade100,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Center(
+        child: Text(
+          'Navigation Error',
+          style: TextStyle(
+            color: Colors.red.shade800,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGlassmorphicNavBar(List<Map<String, dynamic>> items) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withOpacity(0.9),
+            Colors.white.withOpacity(0.7),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.white.withOpacity(0.3),
+          width: 1.5,
+        ),
+      ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withOpacity(0.85),
-                  Colors.white.withOpacity(0.75),
-                ],
-              ),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.3),
-                width: 1.5,
-              ),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: List.generate(items.length, (index) {
-                  final item = items[index];
-                  final isSelected = _currentIndex == index;
-                  
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _currentIndex = index;
-                      });
-                      AppNavigation.instance.goToIndex(index);
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOutCubic,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: isSelected
-                            ? LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  const Color(0xFF6366F1),
-                                  const Color(0xFF8B5CF6),
-                                ],
-                              )
-                            : null,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: const Color(0xFF6366F1).withOpacity(0.4),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.elasticOut,
-                            transform: Matrix4.identity()
-                              ..scale(isSelected ? 1.15 : 1.0),
-                            child: Icon(
-                              _getIconData(item['icon'] ?? 'circle'),
-                              size: 22,
-                              color: isSelected
-                                  ? Colors.white
-                                  : const Color(0xFF64748B),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          AnimatedOpacity(
-                            duration: const Duration(milliseconds: 200),
-                            opacity: isSelected ? 1.0 : 0.7,
-                            child: Text(
-                              item['label'] ?? '',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: isSelected
-                                    ? Colors.white
-                                    : const Color(0xFF64748B),
-                                letterSpacing: -0.2,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-              ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List.generate(items.length, (index) {
+                final item = items[index];
+                final isSelected = _currentIndex == index;
+                
+                return _buildNavItem(
+                  icon: _getIconData(item['icon']),
+                  label: item['label'] ?? '',
+                  isSelected: isSelected,
+                  onTap: () {
+                    setState(() {
+                      _currentIndex = index;
+                    });
+                    AppNavigation.instance.goToIndex(index);
+                  },
+                );
+              }),
             ),
           ),
         ),
@@ -192,33 +159,76 @@ class _CustomNavBarState extends State<CustomNavBar> {
     );
   }
 
-  Widget _buildErrorNavBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 18,
-            color: Colors.grey.shade600,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'Navigation unavailable',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
+  Widget _buildNavItem({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: isSelected
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFF6366f1),
+                    const Color(0xFF8b5cf6),
+                  ],
+                )
+              : null,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF6366f1).withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.elasticOut,
+              transform: Matrix4.identity()
+                ..scale(isSelected ? 1.15 : 1.0),
+              child: Icon(
+                icon,
+                size: 24,
+                color: isSelected 
+                    ? Colors.white 
+                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: isSelected ? 1.0 : 0.7,
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected 
+                      ? Colors.white 
+                      : Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                  height: 1.2,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

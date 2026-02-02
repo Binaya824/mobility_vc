@@ -1,3 +1,4 @@
+// home_page.dart
 import 'package:flutter/material.dart';
 import 'package:vc_flutter_app/services/config_service.dart';
 import 'package:vc_flutter_app/ui/models/home/home_config.dart';
@@ -30,9 +31,7 @@ class _HomePageState extends State<HomePage> {
 
   void _retryLoadConfig() {
     setState(() {
-      _configFuture = ConfigService().getHomeConfig().then((data) {
-        return HomeConfig.fromJson(data);
-      });
+      _loadConfig();
     });
   }
 
@@ -48,39 +47,41 @@ class _HomePageState extends State<HomePage> {
         case 'galleryPreview':
           return GalleryPreviewSection(data: section.data as GalleryPreviewData);
         default:
-          return Container();
+          return Container(); // Unknown section type
       }
     } catch (e) {
-      // Log error and return empty container
-      debugPrint('Error building section ${section.type}: $e');
-      return Container();
+      // Fallback for parsing errors
+      return Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.red.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.red.shade200),
+        ),
+        child: Text(
+          'Error loading section: ${section.type}',
+          style: const TextStyle(color: Colors.red),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
+        title: const Text(
           'Virtual Campus',
-          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF1E293B),
-              ),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              // Search functionality
-            },
-            icon: const Icon(Icons.search),
-            color: const Color(0xFF1E293B),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
           ),
-        ],
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
       ),
       body: FutureBuilder<HomeConfig>(
         future: _configFuture,
@@ -90,16 +91,11 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
-                  ),
+                  CircularProgressIndicator(),
                   SizedBox(height: 16),
                   Text(
                     'Loading campus...',
-                    style: TextStyle(
-                      color: Color(0xFF1E293B),
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 ],
               ),
@@ -108,85 +104,65 @@ class _HomePageState extends State<HomePage> {
 
           if (snapshot.hasError) {
             return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.grey.shade400,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Failed to load content',
+                    style: TextStyle(fontSize: 18, color: Colors.red),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    snapshot.error.toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 20),
+                  FilledButton(
+                    onPressed: _retryLoadConfig,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.blue.shade600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Unable to load campus data',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: const Color(0xFF1E293B),
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Please check your connection and try again',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey.shade600,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: _retryLoadConfig,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF6366F1),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
+                    child: const Text('Retry'),
+                  ),
+                ],
               ),
             );
           }
 
-          if (!snapshot.hasData) {
-            return const Center(
-              child: Text('No data available'),
+          if (snapshot.hasData) {
+            final config = snapshot.data!;
+            
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                children: [
+                  // Render sections with spacing
+                  ...config.sections.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final section = entry.value;
+                    
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom: index == config.sections.length - 1 ? 0 : 32,
+                      ),
+                      child: _buildSection(section),
+                    );
+                  }),
+                ],
+              ),
             );
           }
 
-          final config = snapshot.data!;
-          
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                const SizedBox(height: 16),
-                
-                // Render sections with proper spacing
-                ...config.sections.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final section = entry.value;
-                  
-                  return Column(
-                    children: [
-                      _buildSection(section),
-                      if (index < config.sections.length - 1)
-                        const SizedBox(height: 32),
-                    ],
-                  );
-                }),
-                
-                const SizedBox(height: 32),
-              ],
-            ),
-          );
+          return Container(); // Fallback
         },
       ),
     );
